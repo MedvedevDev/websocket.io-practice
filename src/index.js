@@ -21,8 +21,12 @@ app.use(express.static(publicDirectoryPath))
 io.on('connection', (socket) => {
     console.log('New Socket connection');
 
-    socket.emit('message', generateMessage('Welcome'))
-    socket.broadcast.emit('message', generateMessage('New user has joined')) // send to everybody except this particular socket
+    socket.on('join', ({ username, room }) => {
+        socket.join(room)
+
+        socket.emit('message', generateMessage('Welcome'))
+        socket.broadcast.to(room).emit('message', generateMessage(`${username} has joined`)) // send to everybody except this particular socket
+    })
 
     // whoever is emiting event sets up a callback function, whoever is receiving event receives a callback function that need to call
     // optionally the data can be transfered between callbacks
@@ -34,7 +38,7 @@ io.on('connection', (socket) => {
         }
 
         // Send chat message
-        io.emit('message', generateMessage(message))
+        io.to('Room2').emit('message', generateMessage(message))
         acknowledgementCallback('Delivered!') // Optional: Message to be delivered from server to client
     });
 

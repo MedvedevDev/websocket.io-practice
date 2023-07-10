@@ -12,6 +12,9 @@ const messages = document.querySelector('#messages')
 const messageTemplate = document.querySelector('#message-template').innerHTML
 const locationTemplate = document.querySelector('#location-message-template').innerHTML
 
+// Parse query string as key-value pairs, returns object
+const { username, room } = Qs.parse(location.search, { ignoreQueryPrefix: true })
+
 // Receive messages
 socket.on('message', (message) => {
     // Render message templates
@@ -75,3 +78,6 @@ socket.on('locationMessage', (location) => {
     })
     messages.insertAdjacentHTML('beforeend', html)
 })
+
+// Send username and room
+socket.emit('join', { username, room })
