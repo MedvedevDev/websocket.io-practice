@@ -19,6 +19,7 @@ const { username, room } = Qs.parse(location.search, { ignoreQueryPrefix: true }
 socket.on('message', (message) => {
     // Render message templates
     const html = Mustache.render(messageTemplate, {
+        username: message.username,
         message: message.text,
         createdAt: moment(message.createdAt).format('h:mm a')
     })
@@ -58,13 +59,12 @@ sendLocationBtn.addEventListener('click', () => {
     sendLocationBtn.setAttribute('disabled', 'disabled')
 
     navigator.geolocation.getCurrentPosition(position => {
-        // enable button
-        sendLocationBtn.removeAttribute('disabled')
-
         socket.emit('sendLocation', {
             long: position.coords.longitude,
-            lat: position.coords.latitude },  (msg) => {
-            console.log(msg);
+            lat: position.coords.latitude },  (acknowledgementMessage) => {
+            // enable button
+            sendLocationBtn.removeAttribute('disabled');
+            console.log(acknowledgementMessage);
         })
     })
 })
@@ -73,11 +73,17 @@ sendLocationBtn.addEventListener('click', () => {
 socket.on('locationMessage', (location) => {
     // Render location template
     const html = Mustache.render(locationTemplate, {
+        username: location.username,
         url: location.url,
         createdAt: moment(location.createdAt).format('h:mm a')
     })
     messages.insertAdjacentHTML('beforeend', html)
 })
 
-// Send username and room
-socket.emit('join', { username, room })
+// Send username and room + acknowledgement
+socket.emit('join', { username, room }, (error) => {
+    if (error) {
+        alert(error);
+        location.href = '/';
+    }
+})
